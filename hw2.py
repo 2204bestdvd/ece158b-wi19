@@ -12,32 +12,38 @@ from mininet.log import setLogLevel
 
 import os
 
+POXDIR = os.environ[ 'HOME' ] + '/pox'
+
+
 class POXHub( Controller ):
     "Custom Controller class to invoke POX forwarding.hub"
-    def start( self ):
-        "Start POX hub"
-        self.pox = '%s/pox/pox.py' % os.environ[ 'HOME' ]
-        self.cmd( self.pox, 'forwarding.hub &' )
-    def stop( self ):
-        "Stop POX"
-        self.cmd( 'kill %' + self.pox )
+    def __init__( self, name, cdir=POXDIR,
+                  command='python pox.py',
+                  cargs=( 'openflow.of_01 --port=%s '
+                          'forwarding.hub' ),
+                  **kwargs ):
+        Controller.__init__( self, name, cdir=cdir,
+                             command=command,
+                             cargs=cargs, **kwargs )
 
 
-class POXBridge( Controller ):
-    "Custom Controller class to invoke POX forwarding.l2_learning"
-    def start( self ):
-        "Start POX learning switch"
-        self.pox = '%s/pox/pox.py' % os.environ[ 'HOME' ]
-        self.cmd( self.pox, 'forwarding.l2_learning &' )
-    def stop( self ):
-        "Stop POX"
-        self.cmd( 'kill %' + self.pox )
+class POXSwitch( Controller ):
+    "Custom Controller class to invoke POX forwarding.hub"
+    def __init__( self, name, cdir=POXDIR,
+                  command='python pox.py',
+                  cargs=( 'openflow.of_01 --port=%s '
+                          'forwarding.l2_learning' ),
+                  **kwargs ):
+        Controller.__init__( self, name, cdir=cdir,
+                             command=command,
+                             cargs=cargs, **kwargs )
 
-controllers = { 'hub': POXHub, 'bridge': POXBridge }
+
+controllers = { 'hub': POXHub, 'switch': POXSwitch }
 
 if __name__ == '__main__':
     setLogLevel( 'info' )
-    net = Mininet( topo=SingleSwitchTopo( 4 ), controller=POXBridge )
+    net = Mininet( topo=SingleSwitchTopo( 4 ), controller=POXHub )
     net.start()
     CLI( net )
     net.stop()
